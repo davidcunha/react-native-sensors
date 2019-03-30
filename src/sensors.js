@@ -12,7 +12,11 @@ const listenerKeys = new Map([
 
 function createSensorObservable(sensorType) {
   return Observable.create(function subscribe(observer) {
-    this.unsubscribeCallback = () => {};
+    this.isSensorAvailable = false;
+    this.unsubscribeCallback = () => {
+      if (!this.isSensorAvailable) return;
+      RNSensors.stop(sensorType);
+    };
 
     RNSensors.isAvailable(sensorType).then(
       () => {
@@ -20,10 +24,7 @@ function createSensorObservable(sensorType) {
           observer.next(data);
         });
 
-        // Register the unsubscribe handler
-        this.unsubscribeCallback = () => {
-          RNSensors.stop(sensorType);
-        };
+        this.isSensorAvailable = true;
 
         // Start the sensor manager
         RNSensors.start(sensorType);
